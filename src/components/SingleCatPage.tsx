@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 
 const SingleCatPage: React.FC = () => {
+    const navigate = useNavigate();
     const location = useLocation();
     const catData = location.state && location.state.catData;
     const [breedDetails, setBreedDetails] = useState<any | null>(null);
@@ -49,7 +50,7 @@ const SingleCatPage: React.FC = () => {
             </div>
             <div>
                 {/* Add a Link to navigate back to the homepage with the current breed */}
-                <Link to="/">Back to Homepage</Link>
+                <Link to={`../breed/${catData.breeds[0].id}`}>Back</Link>
             </div>
         </div>
     );
