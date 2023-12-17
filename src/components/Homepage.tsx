@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import axios from 'axios';
-import { Md5 } from 'ts-md5';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import {Md5} from 'ts-md5';
+import {useNavigate, useParams, useLocation} from 'react-router-dom';
 import LoadingBar from 'react-top-loading-bar';
-import './Homepage.scss';
+
+// @ts-ignore
+import { ReactComponent as Logo } from '../logo.svg';
 
 const Homepage: React.FC = () => {
     const [breed, setBreed] = useState<string>('');
@@ -14,16 +16,19 @@ const Homepage: React.FC = () => {
     const [uniqueHashes, setUniqueHashes] = useState<string[]>([]);
     const corsAnywhereUrl = 'http://localhost:8080';
     const navigate = useNavigate();
-    const { selectedBreedId } = useParams();
+    const {selectedBreedId} = useParams();
     const [loadingBarProgress, setLoadingBarProgress] = useState(0);
     const location = useLocation();
     const pathSegments = location.pathname.split('/');
     const urlBreed = pathSegments[2] || '';
     const [runEffect, setRunEffect] = useState(true);
+    const [loadingText, setLoadingText] = useState<string>('Load More');
 
     // Function to fetch random cats
     const fetchRandomCats = async () => {
         try {
+            setLoadingBarProgress(0);
+            setLoadingText('*Purr*');
             const response = await axios.get(
                 `${corsAnywhereUrl}/https://api.thecatapi.com/v1/images/search?limit=10`,
                 {
@@ -40,6 +45,7 @@ const Homepage: React.FC = () => {
             alert('Apologies but we could not load random cat images at this time! Miau!');
         } finally {
             setLoadingBarProgress(100);
+            setLoadingText('Load More');
         }
     };
 
@@ -63,6 +69,7 @@ const Homepage: React.FC = () => {
 
     // Function to fetch cat images based on the selected breed
     const fetchImagesByBreed = async (selectedBreed: string) => {
+        setLoadingText('*Purr*');
         try {
             const response = await axios.get(
                 `${corsAnywhereUrl}/https://api.thecatapi.com/v1/images/search?page=${page}&limit=10&breed_ids=${selectedBreed}`,
@@ -90,14 +97,16 @@ const Homepage: React.FC = () => {
             alert('Apologies but we could not load cat images at this time! Miau!');
         } finally {
             setLoadingBarProgress(0);
+            setLoadingText('Load More');
         }
     };
 
     // Function to get the content hash of an image
     const getImageContentHash = async (url: string) => {
-        const response = await axios.get(`${corsAnywhereUrl}/${url}`, { responseType: 'arraybuffer' });
+        const response = await axios.get(`${corsAnywhereUrl}/${url}`, {responseType: 'arraybuffer'});
         const buffer = new Uint8Array(response.data);
         const text = new TextDecoder().decode(buffer);
+        setLoadingBarProgress(loadingBarProgress + 10);
         return Md5.hashStr(text);
     };
 
@@ -106,13 +115,15 @@ const Homepage: React.FC = () => {
         setPage(1);
         setHasMoreCats(true);
         setUniqueHashes([]);
+        setCatImages([]);
+        setLoadingBarProgress(loadingBarProgress + 10);
 
         if (selectedBreed) {
             // Fetch images for the selected breed if available
             setBreed(selectedBreed);
             fetchImagesByBreed(selectedBreed);
             // Update the URL with the selected breed
-            navigate(`/breed/${selectedBreed}`);
+            navigate(`/b/${selectedBreed}`);
         } else {
             // If no breed is selected, fetch random cats
             fetchRandomCats();
@@ -142,15 +153,14 @@ const Homepage: React.FC = () => {
         // Update uniqueHashes after processing all images
         setUniqueHashes((prevHashes) => [...prevHashes, ...uniqueNewImages.map((image) => image.contentHash)]);
 
-        // For better UX, display the images first, then remove duplicates as there is significant delay awaiting the content of all images
-        setCatImages((prevImages) => [...prevImages, ...uniqueNewImages]);
-
         return uniqueNewImages;
     };
 
 
 // Function to handle "Load more" button click
     const handleLoadMore = async () => {
+        setLoadingBarProgress(loadingBarProgress + 10);
+        setLoadingText('*Purr*');
         try {
             const response = await axios.get(
                 `${corsAnywhereUrl}/https://api.thecatapi.com/v1/images/search?page=${page + 1}&limit=10&breed_ids=${breed}`,
@@ -173,13 +183,16 @@ const Homepage: React.FC = () => {
         } catch (error) {
             console.error('Error fetching additional cat images:', error);
             alert('Apologies but we could not load more cats for you at this time! Miau!');
+        } finally {
+            setLoadingBarProgress(100);
+            setLoadingText('Load More')
         }
     };
 
 
     // Function to handle "View Details" button click
     const handleViewDetails = (catDetails: any) => {
-        navigate(`/breed/${catDetails.breeds[0].id}/${catDetails.id}`, { state: { catData: catDetails } });
+        navigate(`/b/${catDetails.breeds[0].id}/${catDetails.id}`, {state: {catData: catDetails}});
     };
 
 
@@ -187,6 +200,7 @@ const Homepage: React.FC = () => {
         if (runEffect) {
             console.log('here', catImages);
             setLoadingBarProgress(0);
+            setLoadingText('*Purr*')
             // Set the breed based on the URL parameter
             const currentBreed = selectedBreedId || urlBreed;
             fetchBreeds();
@@ -202,7 +216,7 @@ const Homepage: React.FC = () => {
 
             // Update the route in the URL when the breed changes
             if (currentBreed) {
-                navigate(`/breed/${currentBreed}`);
+                navigate(`/b/${currentBreed}`);
             }
             // Your existing useEffect logic
 
@@ -214,33 +228,40 @@ const Homepage: React.FC = () => {
 
     return (
         <div className="cat-explorer-container">
-            <LoadingBar
-                color="#f11946"
-                progress={loadingBarProgress}
-                onLoaderFinished={() => setLoadingBarProgress(0)}
-            />
-            <h1>Cat Explorer</h1>
-            <label>Breed</label>
-            <select id="breedSelect" value={breed} onChange={(e) => handleBreedChange(e.target.value)}>
-                <option value="">--Random--</option>
-                {breeds.map((cat: any) => (
-                    <option key={cat.id} value={cat.id}>
-                        {cat.name}
-                    </option>
-                ))}
-            </select>
-
-            {catImages.length > 0 && (
-                <div>
-                    {catImages.map((image: any, index) => (
-                        <div key={index} className="cat-image-container">
-                            <img src={image.url} alt={`Cat ${index + 1}`} />
-                            <button onClick={() => handleViewDetails(image)}>View Details</button>
+            <LoadingBar color="#f11946" progress={loadingBarProgress}
+                        onLoaderFinished={() => setLoadingBarProgress(0)}/>
+            <div className="flex-container">
+                <div className="content-container">
+                    {catImages.length === 0 && <span>*Purr*</span>}
+                    {catImages.length > 0 && (
+                        <div className="cat-images-container">
+                            {catImages.map((image: any, index) => (
+                                <div key={index} className="cat-image-container">
+                                    <img onClick={() => handleViewDetails(image)} src={image.url}
+                                         alt={`Cat ${index + 1}`}/>
+                                </div>
+                            ))}
                         </div>
-                    ))}
-                    {hasMoreCats && <button onClick={handleLoadMore}>Load more</button>}
+                    )}
                 </div>
-            )}
+                <div className="navigation-bar">
+                    <div className="sticky">
+                        <Logo />
+                        <h1>Cat Breeds</h1>
+                        <select id="breedSelect" value={breed} onChange={(e) => handleBreedChange(e.target.value)}>
+                            <option value="">--Random--</option>
+                            {breeds.map((cat: any) => (
+                                <option key={cat.id} value={cat.id}>
+                                    {cat.name}
+                                </option>
+                            ))}
+                        </select>
+                        <div>
+                            {hasMoreCats &&  <button onClick={handleLoadMore} >{ loadingText }</button> }
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };

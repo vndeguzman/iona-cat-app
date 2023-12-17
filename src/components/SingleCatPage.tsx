@@ -31,7 +31,7 @@ const SingleCatPage: React.FC = () => {
 
     if (!catData || !breedDetails) {
         // Handle the case where catData or breedDetails is not available
-        return <div>Loading...</div>;
+        return <div>*Purr*</div>;
     }
 
     const { id, url } = catData;
@@ -50,7 +50,7 @@ const SingleCatPage: React.FC = () => {
             </div>
             <div>
                 {/* Add a Link to navigate back to the homepage with the current breed */}
-                <Link to={`../breed/${catData.breeds[0].id}`}>Back</Link>
+                <Link to={`../b/${catData.breeds[0].id}`}>Back</Link>
             </div>
         </div>
     );

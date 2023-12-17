@@ -1,0 +1,164 @@
+// Homepage.scss
+
+$nav-bar-width: 20%;
+$primary-color: #f11946;
+$primary-dark-color: #c10835;
+$background-color: #00000019;
+$card-background-color: #00000019;
+$card-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
+.cat-explorer-container {
+  margin: 0 auto;
+  background-color: $background-color;
+
+  .flex-container {
+    display: flex;
+  }
+
+  .navigation-bar {
+    min-height: 100vh;
+    width: $nav-bar-width;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+
+    h1 {
+      font-size: 2em;
+      margin-bottom: 20px;
+      color: $primary-color;
+    }
+
+    label {
+      font-size: 1.2em;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    select {
+      font-size: 1em;
+      padding: 8px;
+      margin-bottom: 20px;
+    }
+
+    .sticky {
+      display: block;
+      position: sticky;
+      top: 3em;
+    }
+  }
+
+  .content-container {
+    flex-grow: 1;
+    min-width: 80vw;
+
+    .cat-images-container {
+      padding: 5px;
+
+      .cat-image-container {
+        flex: 0 0 calc(33.33% - 20px);
+        position: relative;
+        overflow: hidden;
+        box-shadow: $card-shadow;
+        background-color: $card-background-color;
+        transition: transform 0.3s ease-in-out;
+
+        &:hover {
+          cursor: pointer;
+          transform: scale(1.02);
+        }
+
+        img {
+          width: 100%;
+          height: auto;
+          max-height: 200px;
+          object-fit: cover;
+        }
+
+        &:hover:not(.button) {
+          // Add a semi-transparent overlay on hover
+          &:before {
+            content: 'View Details';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            font-size: 1.5em;
+            border-radius: 8px;
+            transition: opacity 0.3s;
+            pointer-events: none;
+          }
+        }
+
+        a {
+          position: absolute;
+          top: 0;
+          left: 0;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          width: 100%;
+          height: 100%;
+          text-decoration: none;
+          color: #fff;
+          background: rgba(0, 0, 0, 0.5);
+          opacity: 0;
+          transition: opacity 0.3s;
+
+          &:hover {
+            opacity: 1;
+          }
+
+          span {
+            font-size: 1.5em;
+            font-weight: bold;
+          }
+
+        }
+      }
+    }
+
+
+  }
+}
+
+button {
+  display: block;
+  margin: 0 auto;
+  padding: 10px 20px;
+  background-color: $primary-color;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+
+  &:hover {
+    background-color: $primary-dark-color;
+  }
+}
+
+.load-more-container {
+  .cat-image-container {
+    margin-bottom: 0; // Remove the margin for the last cat image
+
+    button {
+      width: 100%;
+      padding: 1px;
+      background-color: $card-background-color;
+      border: 1px solid $card-background-color;
+      border-radius: $card-background-color;
+      cursor: pointer;
+      transition: transform 0.2s;
+
+      &:hover {
+        transform: scale(1.05);
+      }
+    }
+  }
+}
