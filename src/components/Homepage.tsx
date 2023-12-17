@@ -22,6 +22,12 @@ const Homepage: React.FC = () => {
                 });
 
                 setBreeds(response.data);
+
+                // Set the first breed as the default breed
+                if (response.data.length > 0) {
+                    setBreed(response.data[0].id);
+                    await handleBreedChange(response.data[0].id);
+                }
             } catch (error) {
                 console.error('Error fetching cat breeds:', error);
                 alert('Apologies but we could not load cat breeds at this time! Miau!');
