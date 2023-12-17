@@ -1,33 +1,56 @@
-// src/components/SingleCatPage.tsx
-
-import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom'; // Import useNavigate
+import React, { useEffect, useState } from 'react';
+import { useLocation, Link } from 'react-router-dom';
+import axios from 'axios';
 
 const SingleCatPage: React.FC = () => {
-    const { breed } = useParams<{ breed: string }>();
-    const navigate = useNavigate(); // Use useNavigate instead of useHistory
+    const location = useLocation();
+    const catData = location.state && location.state.catData;
+    const [breedDetails, setBreedDetails] = useState<any | null>(null);
 
-    // Dummy data for demonstration, replace with actual data fetching
-    const catData = {
-        image: 'cat-image-url',
-        breed: 'Breed Name',
-        origin: 'Origin',
-        temperament: 'Temperament',
-        description: 'Description of the cat.',
-    };
+    useEffect(() => {
+        const fetchBreedDetails = async () => {
+            if (catData && catData.breeds.length > 0) {
+                const breedId = catData.breeds[0].id; // Assuming there's only one breed
+                try {
+                    const response = await axios.get(`https://api.thecatapi.com/v1/breeds/${breedId}`, {
+                        headers: {
+                            'x-api-key': 'live_cpPmfeiLsuY2F5gDsUNLI3DMXHA7gx0pLKaNjX1J665ZrEUS8emY9eZReoM6h8VS', // Replace with your API key
+                        },
+                    });
 
-    const handleBack = () => {
-        navigate(-1); // Navigate back
-    };
+                    setBreedDetails(response.data);
+                } catch (error) {
+                    console.error('Error fetching breed details:', error);
+                }
+            }
+        };
+
+        fetchBreedDetails();
+    }, [catData]);
+
+    if (!catData || !breedDetails) {
+        // Handle the case where catData or breedDetails is not available
+        return <div>Loading...</div>;
+    }
+
+    const { id, url } = catData;
+    const { name, origin, temperament, description } = breedDetails;
 
     return (
         <div>
-            <button onClick={handleBack}>Back</button>
-            <h2>{catData.breed}</h2>
-            <img src={catData.image} alt={catData.breed} />
-            <p>Origin: {catData.origin}</p>
-            <p>Temperament: {catData.temperament}</p>
-            <p>Description: {catData.description}</p>
+            <div>
+                <img src={url} alt={`Cat ${id}`} />
+            </div>
+            <div>
+                <h2>Breed: {name}</h2>
+                <p>Origin: {origin}</p>
+                <p>Temperament: {temperament}</p>
+                <p>Description: {description}</p>
+            </div>
+            <div>
+                {/* Add a Link to navigate back to the homepage with the current breed */}
+                <Link to="/">Back to Homepage</Link>
+            </div>
         </div>
     );
 };

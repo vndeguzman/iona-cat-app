@@ -1,4 +1,4 @@
-// src/App.tsx
+// App.tsx
 
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
@@ -10,7 +10,8 @@ const App: React.FC = () => {
         <Router>
             <Routes>
                 <Route path="/" element={<Homepage />} />
-                <Route path="/cat/:breed" element={<SingleCatPage />} />
+                <Route path="/:breed" element={<Homepage />} />
+                <Route path="/:breed/:id" element={<SingleCatPage />} />
             </Routes>
         </Router>
     );

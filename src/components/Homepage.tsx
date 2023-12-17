@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Md5 } from 'ts-md5';
+import { useNavigate, useParams  } from 'react-router-dom';
 
 const Homepage: React.FC = () => {
     const [breed, setBreed] = useState<string>('');
@@ -10,32 +11,62 @@ const Homepage: React.FC = () => {
     const [hasMoreCats, setHasMoreCats] = useState<boolean>(true);
     const [uniqueHashes, setUniqueHashes] = useState<string[]>([]);
     const corsAnywhereUrl = 'http://localhost:8080'; // Use cors-anywhere
+    const navigate = useNavigate();
+    const { selectedBreedId } = useParams(); // Get the selected breed from the URL
 
-    useEffect(() => {
-        // Fetch cat breeds when the component mounts
-        const fetchBreeds = async () => {
-            try {
-                const response = await axios.get(`${corsAnywhereUrl}/https://api.thecatapi.com/v1/breeds`, {
+
+    const fetchRandomCats = async () => {
+        try {
+            const response = await axios.get(
+                `${corsAnywhereUrl}/https://api.thecatapi.com/v1/images/search?limit=10`,
+                {
                     headers: {
                         'x-api-key': 'live_cpPmfeiLsuY2F5gDsUNLI3DMXHA7gx0pLKaNjX1J665ZrEUS8emY9eZReoM6h8VS',
                     },
-                });
-
-                setBreeds(response.data);
-
-                // Set the first breed as the default breed
-                if (response.data.length > 0) {
-                    setBreed(response.data[0].id);
-                    await handleBreedChange(response.data[0].id);
                 }
-            } catch (error) {
-                console.error('Error fetching cat breeds:', error);
-                alert('Apologies but we could not load cat breeds at this time! Miau!');
-            }
-        };
+            );
 
+            const randomCatImages = response.data;
+            const uniqueNewImages = await filterUniqueImages(randomCatImages);
+            setCatImages(uniqueNewImages);
+            await updateUniqueHashes(uniqueNewImages);
+
+            // Set the first breed as the default breed
+            if (response.data.length > 0) {
+                const defaultBreed = response.data[0].breeds[0]?.id || '';
+                setBreed(defaultBreed);
+            }
+        } catch (error) {
+            console.error('Error fetching random cat images:', error);
+            alert('Apologies but we could not load random cat images at this time! Miau!');
+        }
+    };
+
+    const fetchBreeds = async () => {
+        try {
+            const response = await axios.get(`${corsAnywhereUrl}/https://api.thecatapi.com/v1/breeds`, {
+                headers: {
+                    'x-api-key': 'live_cpPmfeiLsuY2F5gDsUNLI3DMXHA7gx0pLKaNjX1J665ZrEUS8emY9eZReoM6h8VS',
+                },
+            });
+
+            setBreeds(response.data);
+        } catch (error) {
+            console.error('Error fetching cat breeds:', error);
+            alert('Apologies but we could not load cat breeds at this time! Miau!');
+        }
+    };
+
+    useEffect(() => {
+        // Fetch cat breeds when the component mounts
+        fetchRandomCats();
         fetchBreeds();
-    }, []); // Empty dependency array ensures this effect runs once on component mount
+    }, [selectedBreedId]); // Empty dependency array ensures this effect runs once on component mount
+
+    useEffect(() => {
+        // Update the route in the URL when the breed changes
+        navigate(`/${breed}`);
+    }, [breed, navigate]);
 
     const getImageContentHash = async (url: string) => {
         const response = await axios.get(`${corsAnywhereUrl}/${url}`, { responseType: 'arraybuffer' });
@@ -55,14 +86,28 @@ const Homepage: React.FC = () => {
         setUniqueHashes([]); // Reset uniqueHashes
 
         try {
-            const response = await axios.get(
-                `${corsAnywhereUrl}/https://api.thecatapi.com/v1/images/search?page=1&limit=10&breed_ids=${selectedBreed}`,
-                {
-                    headers: {
-                        'x-api-key': 'live_cpPmfeiLsuY2F5gDsUNLI3DMXHA7gx0pLKaNjX1J665ZrEUS8emY9eZReoM6h8VS',
-                    },
-                }
-            );
+            let response;
+            if (selectedBreed) {
+                // Fetch images for the selected breed if available
+                response = await axios.get(
+                    `${corsAnywhereUrl}/https://api.thecatapi.com/v1/images/search?page=1&limit=10&breed_ids=${selectedBreed}`,
+                    {
+                        headers: {
+                            'x-api-key': 'live_cpPmfeiLsuY2F5gDsUNLI3DMXHA7gx0pLKaNjX1J665ZrEUS8emY9eZReoM6h8VS',
+                        },
+                    }
+                );
+            } else {
+                // Fetch images from the default API when no breed is selected
+                response = await axios.get(
+                    `${corsAnywhereUrl}/https://api.thecatapi.com/v1/images/search?limit=10`,
+                    {
+                        headers: {
+                            'x-api-key': 'live_cpPmfeiLsuY2F5gDsUNLI3DMXHA7gx0pLKaNjX1J665ZrEUS8emY9eZReoM6h8VS',
+                        },
+                    }
+                );
+            }
 
             const images = response.data;
             const uniqueNewImages = await filterUniqueImages(images);
@@ -120,6 +165,11 @@ const Homepage: React.FC = () => {
         return uniqueNewImages;
     };
 
+    const handleViewDetails = (catDetails: any) => {
+        // Navigate to SingleCatPage when "View Details" is clicked
+        // Pass catDetails as state to SingleCatPage
+        navigate(`/${breed}/${catDetails.id}`, { state: { catData: catDetails } });
+    };
 
     const updateUniqueHashes = async (images: any[]) => {
         for (const image of images) {
@@ -130,10 +180,10 @@ const Homepage: React.FC = () => {
 
     return (
         <div>
-            <h1>Cat Browser</h1>
+            <h1>Cat Explorer</h1>
             <label>Breed</label>
             <select onChange={(e) => handleBreedChange(e.target.value)}>
-                <option value="">Select Breed</option>
+                <option value="">--Random--</option>
                 {breeds.map((cat: any) => (
                     <option key={cat.id} value={cat.id}>
                         {cat.name}
@@ -143,10 +193,12 @@ const Homepage: React.FC = () => {
 
             {catImages.length > 0 && (
                 <div>
-                    <h2>Images of {breed}</h2>
                     <div>
                         {catImages.map((image: any, index) => (
-                            <img key={index} src={image.url} alt={`Cat ${index + 1}`} />
+                            <div key={index} className="cat-image-container">
+                                <img src={image.url} alt={`Cat ${index + 1}`} />
+                                <button onClick={() => handleViewDetails(image)}>View Details</button>
+                            </div>
                         ))}
                     </div>
                     {hasMoreCats && <button onClick={handleLoadMore}>Load more</button>}
@@ -155,5 +207,6 @@ const Homepage: React.FC = () => {
         </div>
     );
 };
+
 
 export default Homepage;
