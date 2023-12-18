@@ -28,9 +28,9 @@ const Homepage: React.FC = () => {
     const fetchRandomCats = async () => {
         try {
             setLoadingBarProgress(0);
-            setLoadingText('*Purr*');
+            setLoadingText('*Purring*');
             const response = await axios.get(
-                `${corsAnywhereUrl}/https://api.thecatapi.com/v1/images/search?limit=10`,
+                `${corsAnywhereUrl}/https://api.thecatapi.com/v1/images/search?limit=10&has_breeds=true`,
                 {
                     headers: {
                         'x-api-key': 'live_cpPmfeiLsuY2F5gDsUNLI3DMXHA7gx0pLKaNjX1J665ZrEUS8emY9eZReoM6h8VS',
@@ -69,7 +69,7 @@ const Homepage: React.FC = () => {
 
     // Function to fetch cat images based on the selected breed
     const fetchImagesByBreed = async (selectedBreed: string) => {
-        setLoadingText('*Purr*');
+        setLoadingText('*Purring*');
         try {
             const response = await axios.get(
                 `${corsAnywhereUrl}/https://api.thecatapi.com/v1/images/search?page=${page}&limit=10&breed_ids=${selectedBreed}`,
@@ -160,7 +160,7 @@ const Homepage: React.FC = () => {
 // Function to handle "Load more" button click
     const handleLoadMore = async () => {
         setLoadingBarProgress(loadingBarProgress + 10);
-        setLoadingText('*Purr*');
+        setLoadingText('*Purring*');
         try {
             const response = await axios.get(
                 `${corsAnywhereUrl}/https://api.thecatapi.com/v1/images/search?page=${page + 1}&limit=10&breed_ids=${breed}`,
@@ -192,7 +192,10 @@ const Homepage: React.FC = () => {
 
     // Function to handle "View Details" button click
     const handleViewDetails = (catDetails: any) => {
-        navigate(`/b/${catDetails.breeds[0].id}/${catDetails.id}`, {state: {catData: catDetails}});
+        const selectedBreedId = catDetails.breeds[0]?.id || '';
+        if(selectedBreedId) {
+            navigate(`/b/${selectedBreedId}/${catDetails.id}`, { state: { catData: catDetails } });
+        }
     };
 
 
@@ -200,7 +203,7 @@ const Homepage: React.FC = () => {
         if (runEffect) {
             console.log('here', catImages);
             setLoadingBarProgress(0);
-            setLoadingText('*Purr*')
+            setLoadingText('*Purring*')
             // Set the breed based on the URL parameter
             const currentBreed = selectedBreedId || urlBreed;
             fetchBreeds();
@@ -232,7 +235,7 @@ const Homepage: React.FC = () => {
                         onLoaderFinished={() => setLoadingBarProgress(0)}/>
             <div className="flex-container">
                 <div className="content-container">
-                    {catImages.length === 0 && <span>*Purr*</span>}
+                    {catImages.length === 0 && <span>*Purring*</span>}
                     {catImages.length > 0 && (
                         <div className="cat-images-container">
                             {catImages.map((image: any, index) => (
@@ -247,7 +250,7 @@ const Homepage: React.FC = () => {
                 <div className="navigation-bar">
                     <div className="sticky">
                         <Logo />
-                        <h1>Cat Breeds</h1>
+                        <h1>Explorer</h1>
                         <select id="breedSelect" value={breed} onChange={(e) => handleBreedChange(e.target.value)}>
                             <option value="">--Random--</option>
                             {breeds.map((cat: any) => (

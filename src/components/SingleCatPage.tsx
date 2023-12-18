@@ -29,9 +29,26 @@ const SingleCatPage: React.FC = () => {
         fetchBreedDetails();
     }, [catData]);
 
+    // Track scroll position
+    const [scrollPosition, setScrollPosition] = useState<number>(0);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            setScrollPosition(window.scrollY);
+        };
+
+        // Attach scroll event listener
+        window.addEventListener('scroll', handleScroll);
+
+        // Clean up the event listener when the component is unmounted
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+        };
+    }, []);
+
     if (!catData || !breedDetails) {
         // Handle the case where catData or breedDetails is not available
-        return <div>*Purr*</div>;
+        return <div>*Purring*</div>;
     }
 
     const { id, url } = catData;
@@ -39,18 +56,27 @@ const SingleCatPage: React.FC = () => {
 
     return (
         <div>
-            <div>
-                <img src={url} alt={`Cat ${id}`} />
-            </div>
-            <div>
-                <h2>Breed: {name}</h2>
-                <p>Origin: {origin}</p>
-                <p>Temperament: {temperament}</p>
-                <p>Description: {description}</p>
-            </div>
-            <div>
-                {/* Add a Link to navigate back to the homepage with the current breed */}
-                <Link to={`../b/${catData.breeds[0].id}`}>Back</Link>
+            <div
+                className="parallax-container"
+                style={{
+                    backgroundImage: `url(${url})`,
+                    backgroundAttachment: 'fixed',
+                    backgroundPosition: `center ${scrollPosition * 0.1}px`, // Adjust the multiplier for the parallax effect
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: 'cover',
+                    minHeight: '100vh', // Ensure full height
+                }}
+            >
+                <div className="parallax-element">
+                    <h2>{name}</h2>
+                    <p>Origin: {origin}</p>
+                    <p>Temperament: {temperament}</p>
+                    <p>{description}</p>
+                    <div>
+                        {/* Add a Link to navigate back to the homepage with the current breed */}
+                        <Link to={`../b/${catData.breeds[0].id}`}>Back</Link>
+                    </div>
+                </div>
             </div>
         </div>
     );
