@@ -19,6 +19,7 @@ Features:
 - Explore random cat images.
 - Select and explore specific cat breeds.
 - View details of each cat image.
+- Deduplicates displayed images based on the content hash.
 
 Note: Make sure you have an internet connection to fetch cat images from the API.
 
